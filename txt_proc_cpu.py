@@ -5,8 +5,6 @@ from pathlib import Path
 import traceback # For detailed error printing
 
 INPUT_FILE_PATH = Path("proc-cpu-data.txt")
-
-# --- Optional Output Configuration ---
 OUTPUT_CSV_FILE = Path("proc_cpu_summary.csv")
 VERBOSE_LOGGING = False
 
@@ -127,7 +125,7 @@ def process_program_cpu_usage(file_path: Path, verbose: bool = False):
 if __name__ == "__main__":
     final_summary = process_program_cpu_usage(INPUT_FILE_PATH, verbose=VERBOSE_LOGGING)
     if final_summary is not None and not final_summary.empty:
-        print("\n--- Program CPU Usage Summary (Time-Weighted Avg % - Corrected Logic) ---")
+        
         pd.set_option('display.max_rows', None) # Show all rows
         pd.set_option('display.max_columns', None)
         pd.set_option('display.width', 1000)

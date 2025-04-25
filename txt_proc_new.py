@@ -87,7 +87,7 @@ def process_proc_creation_log(file_path: Path, verbose: bool = False):
         # Group process creations by 30-second intervals and count
         # Need TimeStamp as index for Grouper
         group_df_indexed = group_df.set_index('TimeStamp')
-        per_30s_counts = group_df_indexed.groupby(pd.Grouper(freq='30S')).size()
+        per_30s_counts = group_df_indexed.groupby(pd.Grouper(freq='30s')).size()
         # group_df.reset_index(inplace=True) # Reset index if needed later, not needed here
 
         peak_per_30s = per_30s_counts.max() if not per_30s_counts.empty else 0
