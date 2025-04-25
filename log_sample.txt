@@ -1,0 +1,87 @@
+{
+    "TimeStamp":"1743622414", 
+    "Location":"/var/log/syslog", 
+    "Content":"
+        Apr  2 19:33:31 debian discern-proc-sorcerer[2905]: #033[31mERRO#033[0m[19:33:31] 
+        [Proc] error saving proc-mem info for pid 2787: rpc error: code = Unavailable desc = connection error: desc = \
+            "transport: Error while dialing: dial tcp 10.0.1.1:50051: connect: connection refused\"
+
+        Apr  2 19:33:31 debian discern-proc-sorcerer[2905]: #033[31mERRO#033[0m[19:33:31] 
+        [Proc] error saving proc-mem info for pid 2718: rpc error: code = Unavailable desc = connection error: desc = \
+            "transport: Error while dialing: dial tcp 10.0.1.1:50051: connect: connection refused\"
+
+        Apr  2 19:33:31 debian discern-proc-sorcerer[2905]: #033[31mERRO#033[0m[19:33:31] 
+        [Proc] error saving proc-mem info for pid 181: rpc error: code = Unavailable desc = connection error: desc = \
+            "transport: Error while dialing: dial tcp 10.0.1.1:50051: connect: connection refused\"
+
+        Apr  2 19:33:31 debian discern-proc-sorcerer[2905]: #033[31mERRO#033[0m[19:33:31] 
+        [Proc] error saving proc-mem info for pid 2905: rpc error: code = Unavailable desc = connection error: desc = \
+            "transport: Error while dialing: dial tcp 10.0.1.1:50051: connect: connection refused\"
+            
+        Apr  2 19:33:31 debian discern-proc-sorcerer[2905]: #033[31mERRO#033[0m[19:33:31] 
+        [Proc] error saving proc-mem info for pid 2767: rpc error: code = Unavailable desc = connection error: desc = \
+            "transport: Error while dialing: dial tcp 10.0.1.1:50051: connect: connection refused\"
+        
+        Apr  2 19:33:32 debian discern-network-sorcerer[2787]: #033[31mERRO#033[0m[19:33:32] 
+        [Network] error adding to network slice: error saving network slice: error saving network slice: rpc error: code = Unavailable desc = connection error: desc = \
+            "transport: Error while dialing: dial tcp 10.0.1.1:50051: connect: connection refused\"
+        
+        Apr  2 19:33:33 debian systemd[1]: discern-os-record.service: Scheduled restart job, restart counter is at 44.
+        
+        Apr  2 19:33:33 debian systemd[1]: Stopped \"The discern network OS metadata recorder. Runs all bpftrace programs\".
+        
+        Apr  2 19:33:33 debian systemd[1]: Started \"The discern network OS metadata recorder. Runs all bpftrace programs\".
+        
+        Apr  2 19:33:33 debian systemd[1]: discern-os-record.service: Succeeded.
+        
+        Apr  2 19:33:34 debian discern-proc-sorcerer[2905]: #033[36mINFO#033[0m[19:33:34] 
+        [Proc] stripping info for: 10668
+        
+        Apr  2 19:33:34 debian discern-proc-sorcerer[2905]: #033[36mINFO#033[0m[19:33:34] 
+        [Proc] stripping info for: 3796
+        
+        Apr  2 19:33:34 debian discern-proc-sorcerer[2905]: #033[36mINFO#033[0m[19:33:34] 
+        [Proc] stripping info for: 10669
+        
+        Apr  2 19:33:34 debian discern-proc-sorcerer[2905]: #033[36mINFO#033[0m[19:33:34] 
+        [Proc] stripping info for: 6060
+        
+        Apr  2 19:33:34 debian discern-proc-sorcerer[2905]: #033[36mINFO#033[0m[19:33:34] 
+        [Proc] stripping info for: 7634
+        
+        Apr  2 19:33:34 debian discern-proc-sorcerer[2905]: #033[36mINFO#033[0m[19:33:34] 
+        [Proc] stripping info for: 9910
+        
+        Apr  2 19:33:34 debian discern-proc-sorcerer[2905]: #033[31mERRO#033[0m[19:33:34] 
+        [Proc] error saving proc-new info for pid 10668: rpc error: code = Unavailable desc = connection error: desc = \
+            "transport: Error while dialing: dial tcp 10.0.1.1:50051: connect: connection refused\"
+            
+        Apr  2 19:33:34 debian discern-proc-sorcerer[2905]: #033[31mERRO#033[0m[19:33:34] 
+        [Proc] error saving proc-new info for pid 3796: rpc error: code = Unavailable desc = connection error: desc = \
+            "transport: Error while dialing: dial tcp 10.0.1.1:50051: connect: connection refused\"
+            
+        Apr  2 19:33:34 debian discern-proc-sorcerer[2905]: #033[31mERRO#033[0m[19:33:34] 
+        [Proc] error saving proc-new info for pid 10669: rpc error: code = Unavailable desc = connection error: desc = \
+            "transport: Error while dialing: dial tcp 10.0.1.1:50051: connect: connection refused\"
+            
+        Apr  2 19:33:34 debian discern-proc-sorcerer[2905]: #033[31mERRO#033[0m[19:33:34] 
+        [Proc] error saving proc-new info for pid 6060: rpc error: code = Unavailable desc = connection error: desc = \
+            "transport: Error while dialing: dial tcp 10.0.1.1:50051: connect: connection refused\"
+        
+        Apr  2 19:33:34 debian discern-proc-sorcerer[2905]: #033[31mERRO#033[0m[19:33:34] 
+        [Proc] error saving proc-new info for pid 7634: rpc error: code = Unavailable desc = connection error: desc = \
+            "transport: Error while dialing: dial tcp 10.0.1.1:50051: connect: connection refused\"
+        
+        Apr  2 19:33:34 debian discern-proc-sorcerer[2905]: #033[31mERRO#033[0m[19:33:34] 
+        [Proc] error saving proc-new info for pid 9910: rpc error: code = Unavailable desc = connection error: desc = \
+            "transport: Error while dialing: dial tcp 10.0.1.1:50051: connect: connection refused\"
+            
+        Apr  2 19:33:34 debian discern-proc-sorcerer[2905]: #033[36mINFO#033[0m[19:33:34] 
+        [Proc] successfully saved data to the fusion core in normal loop
+        
+        Apr  2 19:33:34 debian discern-logs-sorcerer[2767]: #033[36mINFO#033[0m[19:33:34] 
+        [Logs] /var/log/dmesg not found. trying to capture from cli\n", 
+    "DevID":"attacker.infra.real.packetsniffer.blankcanvas"
+}
+
+{"TimeStamp":"1743622414", "Location":"/var/log/auth.log", "Content":"Apr  2 19:33:30 debian sshd[10665]: pam_unix(sshd:session): session opened for user blankcanvas(uid=1001) by (uid=0)\nApr  2 19:33:30 debian systemd-logind[350]: New session 21 of user blankcanvas.\nApr  2 19:33:30 debian systemd: pam_unix(systemd-user:session): session opened for user blankcanvas(uid=1001) by (uid=0)\nApr  2 19:33:30 debian sudo: blankcanvas : PWD=/home/blankcanvas ; USER=root ; COMMAND=/usr/bin/rm -rf /var/log/discern/data/cpu-load-data.txt /var/log/discern/data/file-data.txt /var/log/discern/data/logs-data.txt /var/log/discern/data/network-data.txt /var/log/discern/data/proc-cpu-data.txt /var/log/discern/data/proc-mem-data.txt /var/log/discern/data/proc-new-data.txt\nApr  2 19:33:30 debian sudo: pam_unix(sudo:session): session opened for user root(uid=0) by (uid=1001)\nApr  2 19:33:30 debian sudo: pam_unix(sudo:session): session closed for user root\nApr  2 19:33:30 debian sshd[10686]: Received disconnect from 192.168.254.2 port 48640:11: disconnected by user\nApr  2 19:33:30 debian sshd[10686]: Disconnected from user blankcanvas 192.168.254.2 port 48640\nApr  2 19:33:30 debian sshd[10665]: pam_unix(sshd:session): session closed for user blankcanvas\nApr  2 19:33:30 debian systemd-logind[350]: Session 21 logged out. Waiting for processes to exit.\nApr  2 19:33:30 debian systemd-logind[350]: Removed session 21.\n", "DevID":"attacker.infra.real.packetsniffer.blankcanvas"}
