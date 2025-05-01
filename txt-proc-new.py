@@ -2,11 +2,11 @@ import json
 import pandas as pd
 import numpy as np
 from pathlib import Path
-import traceback
+import argparse
 
-INPUT_FILE_PATH = Path("proc-new-data.txt")
-OUTPUT_CSV_FILE = Path("proc_new_summary.csv")
-VERBOSE_LOGGING = False
+# INPUT_FILE_PATH = Path("proc-new-data.txt")
+# OUTPUT_CSV_FILE = Path("proc_new_summary.csv")
+# VERBOSE_LOGGING = False
 
 
 def process_proc_creation_log(file_path: Path, verbose: bool = False):
@@ -14,7 +14,7 @@ def process_proc_creation_log(file_path: Path, verbose: bool = False):
         print(f"Error: Input file not found at {file_path}")
         return None
 
-    print(f"Processing process creation log: {file_path}...")
+    # print(f"Processing process creation log: {file_path}...")
 
     extracted_records = []
     line_num = 0
@@ -41,18 +41,17 @@ def process_proc_creation_log(file_path: Path, verbose: bool = False):
 
                 except Exception as e:
                     parsing_errors += 1
-                    if verbose: print(f"Warning: Skipping line {line_num} due to error: {e}")
+                    if verbose: print(f"Warning: Skipping line {line_num} due to error: {e} for file: {file_path}.")
                     continue
 
     except Exception as e:
-        print(f"An error occurred during file reading: {e}")
-        traceback.print_exc()
+        print(f"An error occurred during file reading: {e} for file: {file_path}.")
         return None
 
-    print(f"\n--- File Processing Summary ---")
-    print(f" Lines processed: {line_num}")
-    if parsing_errors > 0: print(f" Lines skipped (errors/invalid data): {parsing_errors}")
-    print(f" Valid process creation records extracted: {len(extracted_records)}")
+    # print(f"\n--- File Processing Summary ---")
+    # print(f" Lines processed: {line_num}")
+    if parsing_errors > 0: print(f" Lines skipped (errors/invalid data): {parsing_errors} for file: {file_path}.")
+    # print(f" Valid process creation records extracted: {len(extracted_records)}")
     print("-" * 30)
 
     if not extracted_records:
@@ -60,7 +59,7 @@ def process_proc_creation_log(file_path: Path, verbose: bool = False):
         return None
 
 
-    print("Converting extracted data to DataFrame...")
+    # print("Converting extracted data to DataFrame...")
     df = pd.DataFrame(extracted_records)
     df['TimeStamp'] = pd.to_datetime(df['EpochTimeStamp'], unit='s', errors='coerce')
     df.dropna(subset=['TimeStamp', 'DevID'], inplace=True) # Drop if timestamp conversion failed
@@ -74,7 +73,7 @@ def process_proc_creation_log(file_path: Path, verbose: bool = False):
         print(df.head())
 
     # --- Calculate Statistics per DevID ---
-    print("Calculating statistics per DevID...")
+    # print("Calculating statistics per DevID...")
     all_dev_summaries = []
 
     for dev_id, group_df in df.groupby('DevID'):
@@ -120,28 +119,53 @@ def process_proc_creation_log(file_path: Path, verbose: bool = False):
 
     final_summary_df = pd.DataFrame(all_dev_summaries)
 
-    print("Calculations complete.")
+    # print("Calculations complete.")
 
     return final_summary_df
 
 if __name__ == "__main__":
-    final_summary = process_proc_creation_log(INPUT_FILE_PATH, verbose=VERBOSE_LOGGING)
+    
+    parser = argparse.ArgumentParser(
+        description="Parse and process the (json-like) data collected from the discern project to display the summary",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
+    parser.add_argument(
+        "input_file", 
+        type=Path,
+        help="Path to the input file change log (proc-new-data.txt)"
+    )
+    parser.add_argument(
+        "-o", "--output",
+        type=Path,
+        default='proc-new-summary.csv',
+        help="Path to save the output summary CSV file."
+    )
+    parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Enable verbose logging output during processing."
+    )
+
+    args = parser.parse_args()
+
+    final_summary = process_proc_creation_log(args.input_file, verbose=args.verbose)
+    
+    # final_summary = process_proc_creation_log(INPUT_FILE_PATH, verbose=VERBOSE_LOGGING)
 
     if final_summary is not None and not final_summary.empty:
-        print("\n--- Process Creation Summary Per DevID ---")
+        # print("\n--- Process Creation Summary Per DevID ---")
         pd.set_option('display.max_rows', None)
         pd.set_option('display.max_columns', None)
         pd.set_option('display.width', 1000)
         pd.set_option('display.float_format', '{:.2f}'.format)
 
-        print(final_summary)
+        # print(final_summary)
 
-        if OUTPUT_CSV_FILE:
+        if args.output:
             try:
-                final_summary.to_csv(OUTPUT_CSV_FILE, index=False)
-                print(f"\nSummary saved to: {OUTPUT_CSV_FILE}")
+                final_summary.to_csv(args.output, index=False)
+                # print(f"\nSummary saved to: {args.output}")
             except Exception as e:
-                print(f"\nError saving summary to CSV: {e}")
-                traceback.print_exc()
+                print(f"\nError saving summary to CSV: {e} for file: {args.input_file}.")
     else:
         print("\nNo process creation summary statistics generated.")

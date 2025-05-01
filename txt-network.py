@@ -2,13 +2,13 @@ import json
 import pandas as pd
 import numpy as np
 from pathlib import Path
-import datetime
-import traceback
+import argparse
 
 
-INPUT_FILE_PATH = Path("network-data.txt")
-OUTPUT_CSV_FILE = Path("net-res.csv")
-VERBOSE_LOGGING = False
+
+# INPUT_FILE_PATH = Path("network-data.txt")
+# OUTPUT_CSV_FILE = Path("net-res.csv")
+# VERBOSE_LOGGING = False
 SORT_BY_COLUMN = 'TotalBytes'
 
 def create_canonical_pair(ip1, ip2):
@@ -25,8 +25,8 @@ def process_all_pairs_file(file_path: Path, verbose: bool = False):
         print(f"Error: Input file not found at {file_path}")
         return None
 
-    print(f"Processing file: {file_path}")
-    print(f"Analyzing ALL communication pairs...")
+    # print(f"Processing file: {file_path}")
+    # print(f"Analyzing ALL communication pairs...")
 
     extracted_packets = []
     line_num = 0
@@ -86,42 +86,41 @@ def process_all_pairs_file(file_path: Path, verbose: bool = False):
         print(f"Error: Input file not found at {file_path}")
         return None
     except Exception as e:
-        print(f"An error occurred during file reading: {e}")
-        traceback.print_exc()
+        print(f"An error occurred during file reading: {e} for file: {file_path}.")
         return None
 
-    if parsing_errors > 0: print(f" Lines skipped (parsing error): {parsing_errors}")
+    if parsing_errors > 0: print(f" Lines skipped (parsing error): {parsing_errors} for file: {file_path}")
 
     if not extracted_packets:
-        print("No valid IP packet data for analysis was extracted.")
+        print("No valid IP packet data for analysis was extracted for file: {file_path}.")
         return None
 
 
-    print("Converting extracted data to DataFrame...")
+    # print("Converting extracted data to DataFrame...")
     df = pd.DataFrame(extracted_packets)
     df['PacketTimestamp'] = pd.to_datetime(df['PacketTimestamp'], unit='s', errors='coerce')
     df['Length'] = pd.to_numeric(df['Length'], errors='coerce').fillna(0)
     df.dropna(subset=['PacketTimestamp', 'IP_A', 'IP_B'], inplace=True)
 
     if df.empty:
-        print("DataFrame is empty after initial processing and cleaning.")
+        print("DataFrame is empty after initial processing and cleaning for file: {file_path}.")
         return None
 
-    print(f"DataFrame created with {len(df)} relevant packet entries.")
+    # print(f"DataFrame created with {len(df)} relevant packet entries.")
     if verbose:
         print("\n--- Processed DataFrame Head ---")
         print(df.head())
 
-    print("\nCalculating statistics per communication pair...")
+    # print("\nCalculating statistics per communication pair...")
     pair_grouping_keys = ['IP_A', 'IP_B']
 
     bytes_per_second = df.groupby(
-        pair_grouping_keys + [pd.Grouper(key='PacketTimestamp', freq='1S')]
+        pair_grouping_keys + [pd.Grouper(key='PacketTimestamp', freq='1s')]
     )['Length'].sum().reset_index()
     bytes_per_second.rename(columns={'Length': 'BytesInSecond'}, inplace=True)
 
     if bytes_per_second.empty:
-        print("Warning: No data after grouping by second.")
+        print("Warning: No data after grouping by second for file: {file_path}.")
     elif verbose: print("Per-second byte aggregation complete.")
     peak_bytes = bytes_per_second.groupby(pair_grouping_keys)['BytesInSecond'].max().reset_index()
     peak_bytes['PeakRateMbps'] = peak_bytes['BytesInSecond'] * 8.0 / 1_000_000.0
@@ -159,25 +158,49 @@ def process_all_pairs_file(file_path: Path, verbose: bool = False):
     return summary_df
 
 if __name__ == "__main__":
-    final_summary = process_all_pairs_file(INPUT_FILE_PATH, verbose=VERBOSE_LOGGING)
+    
+    parser = argparse.ArgumentParser(
+        description="Parse and process the (json-like) data collected from the discern project to display the summary",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
+    parser.add_argument(
+        "input_file", 
+        type=Path,
+        help="Path to the input file change log (network-data.txt)"
+    )
+    parser.add_argument(
+        "-o", "--output",
+        type=Path,
+        default='network-summary.csv',
+        help="Path to save the output summary CSV file."
+    )
+    parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Enable verbose logging output during processing."
+    )
+
+    args = parser.parse_args()
+
+    final_summary = process_all_pairs_file(args.input_file, verbose=args.verbose)
+    # final_summary = process_all_pairs_file(INPUT_FILE_PATH, verbose=VERBOSE_LOGGING)
 
     if final_summary is not None and not final_summary.empty:
-        print("\n--- Summary Per Communication Pair {IP_A, IP_B} ---")
+        # print("\n--- Summary Per Communication Pair {IP_A, IP_B} ---")
         pd.set_option('display.max_rows', 200)
         pd.set_option('display.max_columns', None)
         pd.set_option('display.width', 1200)
         pd.set_option('display.float_format', '{:.3f}'.format)
 
-        print(f"Sorting results by '{SORT_BY_COLUMN}' (descending)...")
+        # print(f"Sorting results by '{SORT_BY_COLUMN}' (descending)...")
         final_summary_sorted = final_summary.sort_values(by=SORT_BY_COLUMN, ascending=False)
-        print(final_summary_sorted)
+        # print(final_summary_sorted)
 
-        if OUTPUT_CSV_FILE:
+        if args.output:
             try:
-                final_summary_sorted.to_csv(OUTPUT_CSV_FILE, index=False)
-                print(f"\nSummary saved to: {OUTPUT_CSV_FILE}")
+                final_summary_sorted.to_csv(args.output, index=False)
+                # print(f"\nSummary saved to: {args.output}")
             except Exception as e:
-                print(f"\nError saving summary to CSV: {e}")
-                traceback.print_exc()
+                print(f"\nError saving summary to CSV: {e} for file: {args.input_file}")
     else:
         print("\nNo communication summary statistics generated.")

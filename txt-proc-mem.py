@@ -2,12 +2,12 @@ import json
 import pandas as pd
 import numpy as np
 from pathlib import Path
-import traceback
+import argparse
 
 
-INPUT_FILE_PATH = Path("proc-mem-data.txt")
-OUTPUT_CSV_FILE = Path("proc_mem_summary.csv")
-VERBOSE_LOGGING = False
+# INPUT_FILE_PATH = Path("proc-mem-data.txt")
+# OUTPUT_CSV_FILE = Path("proc_mem_summary.csv")
+# VERBOSE_LOGGING = False
 SORT_BY_COLUMN = 'TimeWeightedAvgVmSizeMiB'
 
 BYTES_TO_MIB = 1024 * 1024
@@ -19,7 +19,7 @@ def process_program_vmemory_usage(file_path: Path, verbose: bool = False):
         print(f"Error: Input file not found at {file_path}")
         return None
 
-    print(f"Processing program memory usage file (Avg: VmSize, Peaks: VmPeak/VmHWM): {file_path}...")
+    # print(f"Processing program memory usage file (Avg: VmSize, Peaks: VmPeak/VmHWM): {file_path}...")
 
     extracted_records = []
     line_num = 0
@@ -40,7 +40,7 @@ def process_program_vmemory_usage(file_path: Path, verbose: bool = False):
 
                     if timestamp is None or name is None or vm_size_str is None \
                        or vm_peak_str is None or vm_hwm_str is None:
-                        if verbose: print(f"Warning: Skipping line {line_num}. Missing required fields (TimeStamp, Name, VmSize, VmPeak, VmHWM).")
+                        if verbose: print(f"Warning: Skipping line {line_num}. Missing required fields (TimeStamp, Name, VmSize, VmPeak, VmHWM) for file: {file_path}.")
                         continue
 
                     # Convert memory strings to integer bytes
@@ -60,25 +60,24 @@ def process_program_vmemory_usage(file_path: Path, verbose: bool = False):
 
                 except (ValueError, TypeError) as e:
                      parsing_errors += 1
-                     if verbose: print(f"Warning: Skipping line {line_num} due to numeric conversion error: {e}")
+                     if verbose: print(f"Warning: Skipping line {line_num} due to numeric conversion error: {e} for file: {file_path}.")
                      continue
                 except Exception as e:
                     parsing_errors += 1
-                    if verbose: print(f"Warning: Skipping line {line_num} due to error: {e}")
+                    if verbose: print(f"Warning: Skipping line {line_num} due to error: {e}for file: {file_path}.")
                     continue
 
     except Exception as e:
-        print(f"An error occurred during file reading: {e}")
-        traceback.print_exc()
+        print(f"An error occurred during file reading: {e} for file: {file_path}.")
         return None
 
 
-    if parsing_errors > 0: print(f" Lines skipped (errors/invalid data): {parsing_errors}")
+    if parsing_errors > 0: print(f" Lines skipped (errors/invalid data): {parsing_errors} for file: {file_path}.")
 
 
 
     if not extracted_records:
-        print("No valid process memory records extracted.")
+        print("No valid process memory records extracted for file: {file_path}.")
         return None
 
 
@@ -113,7 +112,7 @@ def process_program_vmemory_usage(file_path: Path, verbose: bool = False):
          max_ts = pd.to_datetime(distinct_timestamps.max())
 
     total_duration_seconds = (max_ts - min_ts).total_seconds()
-    print(f"Total observation time span: {total_duration_seconds:.2f} seconds (from {min_ts} to {max_ts})")
+    # print(f"Total observation time span: {total_duration_seconds:.2f} seconds (from {min_ts} to {max_ts})")
 
     if total_duration_seconds <= 0:
         print("Warning: Total duration is zero or negative. Cannot calculate time-weighted average.")
@@ -150,7 +149,7 @@ def process_program_vmemory_usage(file_path: Path, verbose: bool = False):
     summary['MaxVmPeakMiB'] = summary['MaxVmPeakBytes'] / BYTES_TO_MIB
     summary['MaxVmHwmMiB'] = summary['MaxVmHwmBytes'] / BYTES_TO_MIB
 
-    print("Calculations complete.")
+    # print("Calculations complete.")
 
 
     summary = summary[[
@@ -161,24 +160,51 @@ def process_program_vmemory_usage(file_path: Path, verbose: bool = False):
 
 
 if __name__ == "__main__":
-    final_summary = process_program_vmemory_usage(INPUT_FILE_PATH, verbose=VERBOSE_LOGGING)
+    
+    parser = argparse.ArgumentParser(
+        description="Parse and process the (json-like) data collected from the discern project to display the summary",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
+    parser.add_argument(
+        "input_file", 
+        type=Path,
+        help="Path to the input file change log (proc-mem-data.txt)"
+    )
+    parser.add_argument(
+        "-o", "--output",
+        type=Path,
+        default='proc-mem-summary.csv',
+        help="Path to save the output summary CSV file."
+    )
+    parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Enable verbose logging output during processing."
+    )
+
+    args = parser.parse_args()
+
+    final_summary = process_program_vmemory_usage(args.input_file, verbose=args.verbose)
+    
+    
+    # final_summary = process_program_vmemory_usage(INPUT_FILE_PATH, verbose=VERBOSE_LOGGING)
 
     if final_summary is not None and not final_summary.empty:
-        print("\n--- Program Memory Usage Summary (Avg VmSize, Peak VmPeak/VmHWM in MiB, PeakDuration in seconds) ---")
+        # print("\n--- Program Memory Usage Summary (Avg VmSize, Peak VmPeak/VmHWM in MiB, PeakDuration in seconds) ---")
 
         pd.set_option('display.max_rows', None)
         pd.set_option('display.max_columns', None)
         pd.set_option('display.width', 1200)
         pd.set_option('display.float_format', '{:.2f}'.format)
 
-        print(final_summary.sort_values(by=SORT_BY_COLUMN, ascending=False))
-
-        if OUTPUT_CSV_FILE:
+        # print(final_summary.sort_values(by=SORT_BY_COLUMN, ascending=False))
+        final_summary.sort_values(by=SORT_BY_COLUMN, ascending=False)
+        if args.output:
             try:
-                final_summary.sort_values(by=SORT_BY_COLUMN, ascending=False).to_csv(OUTPUT_CSV_FILE, index=False)
-                print(f"\nSummary saved to: {OUTPUT_CSV_FILE}")
+                final_summary.to_csv(args.output, index=False)
+                # print(f"\nSummary saved to: {args.output}")
             except Exception as e:
-                print(f"\nError saving summary to CSV: {e}")
-                traceback.print_exc()
+                print(f"\nError saving summary to CSV: {e} for file: {args.input_file}.")
+
     else:
         print("\nNo program memory usage summary statistics generated.")

@@ -2,11 +2,11 @@ import json
 import pandas as pd
 import numpy as np
 from pathlib import Path
-import traceback # For detailed error printing
+import argparse
 
-INPUT_FILE_PATH = Path("proc-cpu-data.txt")
-OUTPUT_CSV_FILE = Path("proc_cpu_summary.csv")
-VERBOSE_LOGGING = False
+# INPUT_FILE_PATH = Path("proc-cpu-data.txt")
+# OUTPUT_CSV_FILE = Path("proc_cpu_summary.csv")
+# VERBOSE_LOGGING = False
 
 def process_program_cpu_usage(file_path: Path, verbose: bool = False):
 
@@ -14,7 +14,7 @@ def process_program_cpu_usage(file_path: Path, verbose: bool = False):
         print(f"Error: Input file not found at {file_path}")
         return None
 
-    print(f"Processing program CPU usage file: {file_path}...")
+    # print(f"Processing program CPU usage file: {file_path}...")
 
     extracted_records = []
     line_num = 0
@@ -48,12 +48,11 @@ def process_program_cpu_usage(file_path: Path, verbose: bool = False):
                     continue
 
     except Exception as e:
-        print(f"An error occurred during file reading: {e}")
-        traceback.print_exc()
+        print(f"An error occurred during file reading: {e} for file: {file_path}")
         return None
 
     if not extracted_records:
-        print("No valid process CPU records extracted.")
+        print("No valid process CPU records extracted. for file: {file_path}")
         return None
 
     df = pd.DataFrame(extracted_records)
@@ -62,14 +61,14 @@ def process_program_cpu_usage(file_path: Path, verbose: bool = False):
     df.dropna(subset=['TimeStamp', 'Name', 'CpuPercent'], inplace=True)
 
     if df.empty:
-        print("DataFrame is empty after initial processing and cleaning.")
+        print("DataFrame is empty after initial processing and cleaning for file: {file_path}.")
         return None
 
     # --- Calculate Total Observation Duration ---
     distinct_timestamps = df['TimeStamp'].sort_values().unique()
 
     if len(distinct_timestamps) < 2:
-         print("Warning: Need at least two distinct measurement timestamps to calculate time-weighted average.")
+         print("Warning: Need at least two distinct measurement timestamps to calculate time-weighted average for file: {file_path}.")
          summary = df.groupby('Name')['CpuPercent'].agg(MaxCpuUsage='max').reset_index()
          summary['TimeWeightedAvgCpuPercent'] = np.nan
          return summary[['Name', 'TimeWeightedAvgCpuPercent', 'MaxCpuUsage']]
@@ -78,10 +77,10 @@ def process_program_cpu_usage(file_path: Path, verbose: bool = False):
          max_ts = pd.to_datetime(distinct_timestamps.max()) # Last timestamp where *any* measurement occurred
 
     total_duration_seconds = (max_ts - min_ts).total_seconds()
-    print(f"Total observation time span: {total_duration_seconds:.2f} seconds (from {min_ts} to {max_ts})")
+    # print(f"Total observation time span: {total_duration_seconds:.2f} seconds (from {min_ts} to {max_ts})")
 
     if total_duration_seconds <= 0:
-        print("Warning: Total duration is zero or negative. Cannot calculate time-weighted average.")
+        print("Warning: Total duration is zero or negative. Cannot calculate time-weighted average for file: {file_path}")
         summary = df.groupby('Name')['CpuPercent'].agg(MaxCpuUsage='max').reset_index()
         summary['TimeWeightedAvgCpuPercent'] = np.nan
         return summary[['Name', 'TimeWeightedAvgCpuPercent', 'MaxCpuUsage']]
@@ -113,7 +112,7 @@ def process_program_cpu_usage(file_path: Path, verbose: bool = False):
     # Sum(CPU_i * Duration_i) / TotalDuration
     summary['AvgCpuPercent'] = summary['TotalCpuWeighted'] / summary['Duration']
 
-    print("Calculations complete.")
+    # print("Calculations complete.")
 
     summary = summary[[
         'Name','Duration', 'AvgCpuPercent', 'MaxCpuUsage', 'DataPoints'
@@ -123,23 +122,48 @@ def process_program_cpu_usage(file_path: Path, verbose: bool = False):
 
 
 if __name__ == "__main__":
-    final_summary = process_program_cpu_usage(INPUT_FILE_PATH, verbose=VERBOSE_LOGGING)
+    
+    parser = argparse.ArgumentParser(
+        description="Parse and process the (json-like) data collected from the discern project to display the summary",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
+    parser.add_argument(
+        "input_file", 
+        type=Path,
+        help="Path to the input file change log (proc-cpu-data.txt)"
+    )
+    parser.add_argument(
+        "-o", "--output",
+        type=Path,
+        default='proc-cpu-summary.csv',
+        help="Path to save the output summary CSV file."
+    )
+    parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Enable verbose logging output during processing."
+    )
+
+    args = parser.parse_args()
+
+    final_summary = process_program_cpu_usage(args.input_file, verbose=args.verbose)
+    
+    # final_summary = process_program_cpu_usage(INPUT_FILE_PATH, verbose=VERBOSE_LOGGING)
     if final_summary is not None and not final_summary.empty:
         
         pd.set_option('display.max_rows', None) # Show all rows
         pd.set_option('display.max_columns', None)
         pd.set_option('display.width', 1000)
         pd.set_option('display.float_format', '{:.3f}'.format) # Format floats
-
-        print(final_summary.sort_values(by='AvgCpuPercent', ascending=False))
+        final_summary.sort_values(by='AvgCpuPercent', ascending=False)
+        # print(final_summary.sort_values(by='AvgCpuPercent', ascending=False))
 
         # --- Optional: Save to CSV File ---
-        if OUTPUT_CSV_FILE:
+        if args.output:
             try:
-                final_summary.to_csv(OUTPUT_CSV_FILE, index=False)
-                print(f"\nSummary saved to: {OUTPUT_CSV_FILE}")
+                final_summary.to_csv(args.output, index=False)
+                # print(f"\nSummary saved to: {args.output}")
             except Exception as e:
-                print(f"\nError saving summary to CSV: {e}")
-                traceback.print_exc()
+                print(f"\nError saving summary to CSV: {e} for file: {args.input_file}")
     else:
         print("\nNo program CPU usage summary statistics generated.")
